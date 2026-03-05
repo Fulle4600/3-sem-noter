@@ -384,7 +384,79 @@ newman run BrugerAPI.postman_collection.json \
 
 ---
 
-## 8. Avancerede Query Parameter mønstre
+## 8. JWT — Autentificering i REST APIs
+
+JWT (JSON Web Token) bruges til at håndtere autentificering i stateless systemer som REST APIs. I stedet for at gemme sessioner på serveren sender klienten et token med hvert request.
+
+### Struktur
+
+Et JWT består af tre Base64-kodede dele adskilt af punktummer: `Header.Payload.Signature`
+
+```
+eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTYiLCJuYW1lIjoiQW5uYSIsInJvbGUiOiJ1c2VyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+   ^-- Header                ^-- Payload                                               ^-- Signature
+```
+
+**Header** — hvilken algoritme bruges:
+```json
+{ "alg": "HS256", "typ": "JWT" }
+```
+
+**Payload** — data om brugeren (*claims*):
+```json
+{
+  "sub": "123456",
+  "name": "Anna Andersen",
+  "role": "admin",
+  "exp": 1735689600,
+  "iat": 1735603200
+}
+```
+
+| Claim | Betyder |
+|---|---|
+| `sub` | Subject — bruger-ID |
+| `exp` | Expiration — hvornår tokenet udløber (Unix timestamp) |
+| `iat` | Issued At — hvornår tokenet blev udstedt |
+| `role` | Brugerdefineret claim — fx brugerens rolle |
+
+**Signature** — serverens garanti for at tokenet er ægte:
+```
+HMACSHA256(base64(header) + "." + base64(payload), hemmelig_nøgle)
+```
+
+### Autentificeringsflow
+
+```
+1. Bruger logger ind: POST /api/auth/login  {"email": "...", "password": "..."}
+2. Server verificerer → genererer JWT → sender {"token": "eyJhbGciOi..."}
+3. Klient gemmer tokenet (localStorage eller cookie)
+4. Klient sender tokenet med hvert request:
+   GET /api/orders
+   Authorization: Bearer eyJhbGciOi...
+5. Server verificerer signaturen → kender brugerens identitet (ingen database-opslag!)
+```
+
+### JWT vs. Sessions
+
+| | JWT (Stateless) | Session (Stateful) |
+|---|---|---|
+| **Serveren gemmer** | Intet | Session-data i database/memory |
+| **Klienten sender** | Token med hvert request | Session-ID cookie |
+| **Skalerbarhed** | Nem (alle servere kan verificere) | Sværere (alle servere skal kende sessionen) |
+| **Logout** | Svært — tokenet er gyldigt til det udløber | Nemt — slet sessionen |
+
+### Vigtige sikkerhedsregler
+
+> **JWT er signeret — IKKE krypteret!** Gem aldrig passwords eller følsomme data i payload.
+
+- Sæt altid en udløbstid (`exp`) — f.eks. 1 time
+- Brug HTTPS — så tokenet ikke kan opfanges under transport
+- `httpOnly cookie` er sikrere end `localStorage` (modstandsdygtig over for XSS)
+
+---
+
+## 9. Avancerede Query Parameter mønstre
 
 ### Søgning
 
@@ -433,7 +505,7 @@ GET /api/produkter?kategori=elektronik&min_pris=500&sort=pris&order=asc&page=0&s
 
 ---
 
-## 9. Opsummering
+## 10. Opsummering
 
 | Emne                   | Nogleinformation                                              |
 |------------------------|---------------------------------------------------------------|
@@ -446,6 +518,8 @@ GET /api/produkter?kategori=elektronik&min_pris=500&sort=pris&order=asc&page=0&s
 | pm.test()              | `pm.test("navn", function() { pm.expect(...).to.equal(...) })` |
 | pm.environment.set()   | Gem variabel til brug i næste request                        |
 | Newman                 | Kommandolinje-kørsel af Postman collections (CI/CD)          |
+| JWT                    | Stateless token-baseret autentificering — Header.Payload.Signature |
+| JWT claims             | `sub` (bruger-ID), `exp` (udløb), `iat` (udstedt), `role`   |
 
 ---
 

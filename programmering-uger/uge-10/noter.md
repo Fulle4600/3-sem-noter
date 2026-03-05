@@ -529,6 +529,81 @@ createApp({
 
 ---
 
+## Query Parameters & [FromQuery] i ASP.NET
+
+Når Vue-frontenden henter data fra en REST API, sender den ofte ekstra info via URL'en — fx hvad brugeren har søgt på, eller hvordan listen skal sorteres. Det sker med **query parameters**.
+
+### Hvad er query parameters?
+
+Alt efter `?` i en URL er query parameters — nøgle=værdi par adskilt med `&`:
+
+```
+GET /api/products                              → Hent alle produkter
+GET /api/products?search=laptop                → Søg efter "laptop"
+GET /api/products?sort=price                   → Sortér efter pris
+GET /api/products?search=laptop&sort=price     → Kombiner begge
+```
+
+### `[FromQuery]` i ASP.NET Controller
+
+`[FromQuery]` fortæller din C# controller at hente værdien fra URL'en — ikke fra request body'en:
+
+```csharp
+[HttpGet]
+public IActionResult GetProducts(
+    [FromQuery] string? search,
+    [FromQuery] string? sort)
+{
+    var products = _repo.GetAll();
+
+    if (!string.IsNullOrEmpty(search))
+        products = products.Where(p =>
+            p.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+    if (sort == "price")
+        products = products.OrderBy(p => p.Price);
+
+    return Ok(products);
+}
+```
+
+### Fra Vue til API — hele flowet
+
+```
+Bruger skriver "laptop" i søgefelt
+          ↓
+Vue sender: GET /api/products?search=laptop
+          ↓
+ASP.NET: [FromQuery] string? search = "laptop"
+          ↓
+Kode filtrerer listen
+          ↓
+JSON sendes tilbage til Vue
+          ↓
+Vue viser de filtrerede resultater
+```
+
+**Vue.js med Axios — send query parameters:**
+```javascript
+const response = await axios.get('/api/products', {
+  params: {
+    search: this.searchText,
+    sort: this.sortBy
+  }
+});
+// Axios bygger automatisk URL: /api/products?search=laptop&sort=price
+```
+
+### `[FromQuery]` vs `[FromRoute]` vs `[FromBody]`
+
+| Attribut | Hvor | Eksempel |
+|---|---|---|
+| `[FromQuery]` | Efter `?` i URL | `/api/products?sort=price` |
+| `[FromRoute]` | Del af URL-stien | `/api/products/42` |
+| `[FromBody]` | JSON i request body | `POST /api/products` med `{"name": "Laptop"}` |
+
+---
+
 ## Opsummering
 
 | Direktiv / Koncept | Beskrivelse                                                  |
@@ -543,6 +618,9 @@ createApp({
 | `v-if` / `v-else`  | Betinget rendering — fjerner/tilføjer fra DOM                |
 | `v-show`           | Betinget synlighed — skjuler med CSS                         |
 | `:key`             | Unik nøgle i `v-for` — hjælper Vue med at opdatere effektivt |
+| Query parameters   | `?key=value&key2=value2` efter `?` i URL — sender filtre/søgning |
+| `[FromQuery]`      | ASP.NET-attribut der henter query parameter fra URL til C#-parameter |
+| `axios params`     | `{ params: { search: "..." } }` — Axios bygger URL automatisk |
 
 ---
 
