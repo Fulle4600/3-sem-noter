@@ -45,7 +45,23 @@ dotnet add package Selenium.Support
 
 Eller via NuGet Package Manager i Visual Studio.
 
-### Alternativt med xUnit og Selenium
+### Hvorfor bruges xUnit sammen med Selenium?
+
+Selenium er et **fjernstyringsværktøj** — det sender kommandoer til en rigtig browser via WebDriver-protokollen og styrer den udefra. Selenium kan åbne sider, klikke på knapper og udfylde felter, men det har **ingen indbygget assert-funktionalitet**. Selenium ved altså ikke hvad "en test" er — det er bare et automatiseringsbibliotek.
+
+Derfor kombinerer vi Selenium med **xUnit**, som leverer:
+- `[Fact]` og `[Theory]` til at markere testmetoder
+- `Assert.Equal`, `Assert.Contains`, `Assert.True` osv. til at verificere resultater
+- Test runner-integration (Visual Studio Test Explorer, `dotnet test`)
+
+```
+xUnit  →  "Hvad er en test? Hvad skal verificeres?"
+Selenium →  "Åbn browseren, klik her, skriv dette"
+```
+
+De to biblioteker løser altså forskellige problemer og supplerer hinanden.
+
+### Opsætning med xUnit og Selenium
 
 ```bash
 dotnet new xunit -n WebshopApp.UITests

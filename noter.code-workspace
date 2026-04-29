@@ -1,0 +1,36 @@
+{
+  "folders": [
+    {
+      "name": "Noter (oversigt)",
+      "path": "."
+    },
+    {
+      "name": "Softwareteknologi",
+      "path": "softwareteknologi"
+    },
+    {
+      "name": "Teknologi",
+      "path": "teknologi"
+    },
+    {
+      "name": "Programmering",
+      "path": "programmering"
+    },
+    {
+      "name": "SWU — Uger",
+      "path": "softwareteknologi-uger"
+    },
+    {
+      "name": "TEK — Uger",
+      "path": "teknologi-uger"
+    },
+    {
+      "name": "PROG — Uger",
+      "path": "programmering-uger"
+    }
+  ],
+  "settings": {
+    "explorer.fileNesting.enabled": true,
+    "workbench.editor.labelFormat": "short"
+  }
+}
